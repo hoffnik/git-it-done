@@ -3,24 +3,6 @@ var nameInputEl = document.querySelector("#username");
 var repoContainerEl = document.querySelector('#repos-container');
 var repoSearchTerm = document.querySelector("#repo-search-term");
 
-
-var getUserRepos = function(user){
-
-    // format the github api url
-    var apiUrl = 'https://api.github.com/users/' + user + '/repos';
-
-    // make a request to the url
-    fetch(apiUrl).then(function(response) {
-        if (response.ok) {
-          response.json().then(function(data) {
-            displayRepos(data, user);
-          });
-        } else {
-          alert("Error: GitHub User Not Found");
-        }
-      });
-};
-
 var formSubmitHandler = function(event){
     event.preventDefault();
     // get value from input element
@@ -28,10 +10,35 @@ var formSubmitHandler = function(event){
 
     if (username) {
         getUserRepos(username);
-        nameInputEl.value = "";
+        
+        // clear old content
+        repoContainerEl.textContent = '';
+        nameInputEl.value = '';
     } else {
         alert("Please enter a github username");
     }
+};
+
+var getUserRepos = function(user){
+    // format the github api url
+    var apiUrl = 'https://api.github.com/users/' + user + '/repos';
+
+    // make a request to the url
+    fetch(apiUrl)
+        .then(function(response) {
+        // request was succesfull    
+        if (response.ok) {
+          response.json().then(function(data) {
+            displayRepos(data, user);
+          });
+        } else {
+          alert("Error: GitHub User Not Found");
+        }
+      })
+      .catch(function(error) {
+         // Notice this `.catch()` getting chained onto the end of the `.then()` method
+         alert("Unable to connect to GitHub"); 
+      });
 };
 
 var displayRepos = function(repos, searchTerm) {
@@ -58,19 +65,20 @@ if (repos.length === 0) {
         var titleEl = document.createElement('span');
         titleEl.textContent = repoName;
 
-        // append to container
-        repoEl.append(titleEl);
-
         // create a status element
         var statusEl = document.createElement('span');
         statusEl.classList = 'flex-row align-center';
 
         // check if current repo has issues or not
-        if(repos[i].open_issues_count > 0) {
-            statusEl.innerHTML = "<i class='fas fa-times status-icon icon-danger'></i>" + repos[i].open_issues_count + " issue(s)";
+        if (repos[i].open_issues_count > 0) {
+            statusEl.innerHTML =
+          "<i class='fas fa-times status-icon icon-danger'></i>" + repos[i].open_issues_count + ' issue(s)';
         } else {
-            statusEl.innerHTML = "<i class='fas fa-check-square status-icon icon-success'></i>";
-        }
+         statusEl.innerHTML = "<i class='fas fa-check-square status-icon icon-success'></i>";
+      }
+
+        // append to container
+        repoEl.append(titleEl);
 
         // append container to the DOM
         repoContainerEl.appendChild(repoEl);
